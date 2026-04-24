@@ -13,6 +13,9 @@ canvas { display:block; }
   background:rgba(0,0,16,0.88); z-index:10;
 }
 #overlay h1 { color:#44aaff; font-size:clamp(1.4em,6vw,2.4em); letter-spacing:4px; text-shadow:0 0 20px #44aaff; margin-bottom:6px; }
+#startLeaderboard { margin:12px 0 4px; width:300px; }
+#startLeaderboard .lb-title { color:#556677; font-size:0.72em; letter-spacing:3px; text-align:center; margin-bottom:6px; }
+#startLbList { font-size:0.72em; color:#aabbcc; max-height:160px; overflow-y:auto; }
 #overlay .sub { color:#668899; font-size:clamp(0.7em,3vw,0.95em); letter-spacing:5px; margin-bottom:16px; }
 #overlay .instructions { color:#aabbcc; font-size:clamp(0.65em,2.5vw,0.8em); margin-bottom:6px; text-align:center; padding:0 20px; }
 #nameSection { margin:14px 0 4px; display:flex; flex-direction:column; align-items:center; gap:8px; }
@@ -81,6 +84,10 @@ canvas { display:block; }
     <div id="nameLabel">ENTER YOUR NAME</div>
     <input id="nameInput" maxlength="12" placeholder="PILOT NAME" autocomplete="off" spellcheck="false"/>
     <div id="hiScoreDisplay"></div>
+  </div>
+  <div id="startLeaderboard">
+    <div class="lb-title">— GLOBAL TOP 10 —</div>
+    <div id="startLbList">LOADING...</div>
   </div>
   <button id="startBtn">START GAME</button>
 </div>
@@ -539,21 +546,8 @@ function die(){
     lbList.textContent = 'SUBMITTING...';
     await submitGlobalScore(playerName, score, rank.label);
     const rows = await fetchLeaderboard();
-    if (!rows || !rows.length) {
-      lbList.textContent = 'COULD NOT LOAD SCORES';
-    } else {
-      lbList.innerHTML = rows.slice(0,10).map((r,i) => {
-        const pos = i+1;
-        const n = (r[0]||'?').toString().padEnd(12,' ').replace(/ /g,'&nbsp;');
-        const s = (r[1]||0).toString().padStart(6,' ').replace(/ /g,'&nbsp;');
-        const medal = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':`${pos < 10 ? '&nbsp;' : ''}${pos}.`;
-        const isMe = r[0]===playerName && parseInt(r[1])===score;
-        const col = isMe ? '#ffcc00' : '#aabbcc';
-        return `<div style="display:flex;justify-content:space-between;padding:2px 0;color:${col};font-family:'Courier New',monospace;">
-          <span>${medal}&nbsp;${n}</span><span>${s}</span>
-        </div>`;
-      }).join('');
-    }
+    renderLeaderboard(rows, 'lbList', playerName, score);
+    renderLeaderboard(rows, 'startLbList', playerName, score);
     document.getElementById('gameOverlay').style.display='flex';
     updateHiScoreDisplay();
   },900);
